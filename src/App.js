@@ -1,27 +1,54 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+
+import Main from './components/Main.jsx';
+import Login from './components/Login.jsx';
 import './App.css';
+import * as api from './api';
+import { navigate } from '@reach/router';
 
 class App extends Component {
+  state = {
+    user: {},
+    //isLoading: true,
+    hasError: false
+  };
   render() {
+    const { user } = this.state;
+    //if (isLoading) return <h3>Loading...</h3>;
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+        <h1>Welcome Home</h1>
+        <Login login={this.setuser} user={user}>
+          <Main user={user} logOut={this.logOut} />
+        </Login>
       </div>
     );
+  }
+
+  componentDidUpdate(prevState) {
+    if (prevState.user !== this.state.user) {
+      localStorage.setItem('user', JSON.stringify(this.state.user));
+    }
+  }
+  setuser = username => {
+    api
+      .getUser(username)
+      .then(username => {
+        console.log(username);
+        this.setState({ user: username });
+      })
+      .catch(err => this.setState({ hasError: true }));
+  };
+  logOut = () => {
+    navigate('/');
+    this.setState({ user: {} });
+    localStorage.clear();
+  };
+  componentDidMount() {
+    const user = localStorage.getItem('user');
+    if (user && !user.username) {
+      this.setState({ user: JSON.parse(localStorage.getItem('user')) });
+    }
   }
 }
 
